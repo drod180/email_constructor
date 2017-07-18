@@ -2,7 +2,7 @@
 function saveAsCSVFile () {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var editorSheet = ss.getSheetByName("Editor");
-  var emailName = editorSheet.getRange(2,2,1,1).getValue().toLowerCase().replace(/ /g,'_') + '_csv_';
+  var emailName = editorSheet.getRange(2,2,1,1).getValue().toLowerCase().replace(/ /g,'_') + '_EC_';
   var folders = DriveApp.getFoldersByName("Constructor_Emails");
 
   var projectFolder = setupDirectory_(folders, emailName);
