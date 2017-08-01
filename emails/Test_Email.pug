@@ -1,0 +1,53 @@
+
+extends ../templates/Test_template
+
+block copy_import
+    include ../copy/Test_Copy
+
+block content_area_1
+    // Header Bar
+    include ../content-sections/preheader_bar
+
+
+
+block content_area_1
+    -var image_link_url = campaign_hero_image_link_url
+    -var image_url = campaign_hero_image_url
+    -var section_headline = campaign_headline
+    -var section_body = campaign_body
+    -var cta_data = campaign_cta_data
+    -var promo_legal = campaign_legal
+    -var logo_image = campaign_logo_image
+    -var injected_header_style = ""
+    -var injected_text_style = ""
+    -var side_margin = "30"
+    -var height = "auto"
+    include ../components/full_width_card
+
+block content_area_2
+    -var image_link_url = lefty_hero_image_link_url
+    -var image_url = lefty_hero_image_url
+    -var section_headline = lefty_headline
+    -var section_body = lefty_body
+    -var cta_data = lefty_cta_data
+    -var promo_legal = lefty_legal
+    -var logo_image = lefty_logo_image
+    -var injected_header_style = headline_feature
+    -var injected_text_style = ""
+    -var side_margin = "30"
+    -var height = "auto"
+    include ../components/image_left_card
+
+block content_area_3
+    -var image_link_url = Righty_hero_image_link_url
+    -var image_url = Righty_hero_image_url
+    -var section_headline = Righty_headline
+    -var section_body = Righty_body
+    -var cta_data = Righty_cta_data
+    -var promo_legal = Righty_legal
+    -var logo_image = Righty_logo_image
+    -var injected_header_style = ""
+    -var injected_text_style = ""
+    -var side_margin = "30"
+    -var height = "auto"
+    include ../components/image_right_card

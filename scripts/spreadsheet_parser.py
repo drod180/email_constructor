@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import csv
-
+input_file = 'test_EC_.csv'
 # Get Module info and CTA info and return it as a dictionary
 def parseModules(data, module_count):
     modules_dicts = []
@@ -36,7 +36,7 @@ def parseData():
     module = []
     module_rows = []
     module_row_count = 0
-    with open('test_EC_.csv', 'rU') as csvfile:
+    with open(input_file, 'rU') as csvfile:
         next(csvfile) #Ignore header
         csvReader = csv.reader(csvfile, dialect='excel')
         i = 0
@@ -70,6 +70,7 @@ def parse():
     my_data = parseData()
     parsed_modules = parseModules(my_data, int(my_data[1]['Number of Modules']))
     parsed_data = [dict(my_data[0].items() +
+                        my_data[1].items() +
                         my_data[2].items() +
                         my_data[3].items() +
                         my_data[4].items())] + parsed_modules
