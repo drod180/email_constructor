@@ -1,0 +1,83 @@
+
+include ../scripts/helper-functions
+include ../mixins/main
+include ../stylesheets/main
+block stylesheet_import
+    // No stylesheet import
+block copy_import
+    // No copy import
+
+|#{"\n"}
+
+doctype transitional
+html(xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office")
+    head
+        title
+            block header_title
+                | BMW Email
+
+        +meta_tag_headers
+        +web_font_declarations
+
+        style(type="text/css")
+            include ../stylesheets/embed.css
+        <!--[if (gte mso 9)|(IE)]>
+        style(type="text/css")
+            include ../stylesheets/outlook_embed.css
+        <td><![endif]-->
+    body(style=body_style)
+        +table(table_style, "center", "100%")
+            tr
+                td(style=td_style) &nbsp;
+                td(style=td_style) &nbsp;
+                td(style=td_style) &nbsp;
+
+            tr(style=body_style)
+                td(style=td_style)
+                td(style=td_style width="600")
+                    +if_outlook
+                        +table(table_style+body_style, "center", "100%")
+
+
+                            tr
+                                td(style=td_style)
+                                    block content_area_1
+                                        h1 Content Area 1
+
+                            tr
+                                td(style=td_style)
+                                    block content_area_2
+                                        h1 Content Area 2
+
+                            tr
+                                td(style=td_style) &nbsp;
+
+                            tr
+                                td(style=td_style)
+                                    block content_area_3
+                                        h1 Content Area 3
+
+                            tr
+                                td(style=td_style) &nbsp;
+
+                            tr
+                                td(style=td_style)
+                                    block content_area_4
+                                        h1 Content Area 4
+
+                            tr
+                                td(style=td_style) &nbsp;
+
+                            tr
+                                td(style=td_style)
+                                    include ../content-sections/footer_bmw_links
+
+                            tr
+                                td(style=td_style)
+                                    include ../content-sections/social_media
+
+                            tr
+                                td(style=td_style)
+                                    include ../content-sections/footer_legalese
+
+                td(style=td_style)

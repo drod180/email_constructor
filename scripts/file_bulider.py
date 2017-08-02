@@ -1,5 +1,7 @@
 import spreadsheet_parser
 
+
+#######################Block Strings######################
 module_types = {
     'Full Width': "    include ../components/full_width_card",
     'Left Image': "    include ../components/image_left_card",
@@ -23,7 +25,7 @@ module_vars_standard = """
     -var height = "auto"
 """
 email_start_text = """
-extends ../templates/%s_template
+extends ../templates/%s_Template
 
 block copy_import
     include ../copy/%s_Copy
@@ -35,6 +37,73 @@ block content_area_1
 content_area_text = """
 
 block content_area_%s"""
+
+template_start_text = """
+include ../scripts/helper-functions
+include ../mixins/main
+include ../stylesheets/main
+block stylesheet_import
+    // No stylesheet import
+block copy_import
+    // No copy import
+
+|#{"\\n"}
+
+doctype transitional
+html(xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office")
+    head
+        title
+            block header_title
+                | BMW Email
+
+        +meta_tag_headers
+        +web_font_declarations
+
+        style(type="text/css")
+            include ../stylesheets/embed.css
+        <!--[if (gte mso 9)|(IE)]>
+        style(type="text/css")
+            include ../stylesheets/outlook_embed.css
+        <td><![endif]-->
+    body(style=body_style)
+        +table(table_style, "center", "100%")
+            tr
+                td(style=td_style) &nbsp;
+                td(style=td_style) &nbsp;
+                td(style=td_style) &nbsp;
+
+            tr(style=body_style)
+                td(style=td_style)
+                td(style=td_style width="600")
+                    +if_outlook
+                        +table(table_style+body_style, "center", "100%")
+
+"""
+
+template_content_areas = """
+                            tr
+                                td(style=td_style)
+                                    block content_area_%s
+                                        h1 Content Area %s
+"""
+
+template_content_sections = """
+                            tr
+                                td(style=td_style)
+                                    include ../content-sections/%s
+"""
+
+template_content_spacer = """
+                            tr
+                                td(style=td_style) &nbsp;
+"""
+
+template_end_text = """
+                td(style=td_style)
+"""
+
+#######################End of Block Strings######################
+
 
 
 #hero: Bool - value for if module is hero module
@@ -73,14 +142,44 @@ def build_emails_text(email_name, email_data):
 #email_name: String - Name of email used for file name
 #email_text: String - Email text to buid file with
 def build_email_file(email_name, email_text):
-    email_name = "../emails/%s_Email.pug" % (email_name)
-    with open(email_name, 'w') as out_file:
+    email_file_name = "../emails/%s_Email.pug" % (email_name)
+    with open(email_file_name, 'w') as out_file:
         out_file.writelines(email_text)
 
+#content_count: Int - Number of content blocks
+#link: Bool - Include bmw links content section or not
+def build_template_text(module_count, links = True):
+    template_text = template_start_text
+    for i in range(0, module_count  +  1):
+        template_text += template_content_areas % (i + 1, i + 1)
+        if i != 0:
+            template_text += template_content_spacer
+
+    if links:
+        template_text += template_content_sections % ("footer_bmw_links")
+    template_text += template_content_sections % ("social_media")
+    template_text += template_content_sections % ("footer_legalese")
+    template_text += template_end_text
+
+    return template_text
+
+#email_name: String - Name of email used for file name
+#template_text: String - Template text to buid file with
+def build_template_file(email_name, template_text):
+    template_file_name = "../templates/%s_Template.pug" % (email_name)
+    with open(template_file_name, 'w') as out_file:
+        out_file.writelines(template_text)
+
 def build_files():
+    #Parse Data
     parsed_data = spreadsheet_parser.parse()
+    #Build Email File
     email_name = parsed_data[0]['Email Name']
     email_text = build_emails_text(email_name, parsed_data)
     build_email_file(email_name, email_text)
+    #Build template
+    template_text = \
+        build_template_text(int(parsed_data[0]['Number of Modules']))
+    build_template_file(email_name, template_text)
 
 build_files()
