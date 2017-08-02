@@ -1,6 +1,5 @@
 import spreadsheet_parser
 
-
 #######################Block Strings######################
 module_types = {
     'Full Width': "    include ../components/full_width_card",
@@ -87,6 +86,12 @@ template_content_areas = """
                                         h1 Content Area %s
 """
 
+template_content_areas_card = """
+                            tr
+                                td(style=td_style + card)
+                                    block content_area_%s
+                                        h1 Content Area %s
+"""
 template_content_sections = """
                             tr
                                 td(style=td_style)
@@ -119,7 +124,7 @@ copy_module_text = """
 //- %s Overview
 - var %s_hero_image_url = image_path + ""
 - var %s_hero_image_link_url = "%s"
-- var %s_logo_image = image_path + ""
+- var %s_logo_image = ""
 - var %s_headline = "%s"
 -
     var %s_body = %s
@@ -180,7 +185,7 @@ def build_emails_text(email_name, email_data):
         email_text += build_module_text((i == 1),
                                         email_data[i + 1]['moduleName'],
                                         email_data[i + 1]['moduleType'],
-                                        i + 1)
+                                        i + 2)
 
     return email_text
 
@@ -188,16 +193,21 @@ def build_emails_text(email_name, email_data):
 #email_text: String - Email text to buid file with
 def build_email_file(email_name, parsed_data):
     email_text = build_emails_text(email_name, parsed_data)
-    email_file_name = "../emails/%s_Email.pug" % (email_name)
-    with open(email_file_name, 'w') as out_file:
+    email_file_name = "/../emails/%s_Email.pug" % (email_name)
+    with open(dir_path + email_file_name, 'w') as out_file:
         out_file.writelines(email_text)
 
-#content_count: Int - Number of content blocks
+#parsed_data: array of dictionaries - all parsed data
 #link: Bool - Include bmw links content section or not
-def build_template_text(module_count, links = True):
+def build_template_text(parsed_data, links = True):
     template_text = template_start_text
-    for i in range(0, module_count  +  1):
-        template_text += template_content_areas % (i + 1, i + 1)
+    for i in range(0, int(parsed_data[0]['Number of Modules'])  +  1):
+        if ('moduleType' in parsed_data[i].keys() and
+            (parsed_data[i]['moduleType'] == 'Left Image' or
+            parsed_data[i]['moduleType'] == 'Right Image')):
+            template_text += template_content_areas_card % (i + 1, i + 1)
+        else:
+            template_text += template_content_areas % (i + 1, i + 1)
         if i != 0:
             template_text += template_content_spacer
 
@@ -212,9 +222,9 @@ def build_template_text(module_count, links = True):
 #email_name: String - Name of email used for file name
 #template_text: String - Template text to buid file with
 def build_template_file(email_name, parsed_data):
-    template_text = build_template_text(int(parsed_data[0]['Number of Modules']))
-    template_file_name = "../templates/%s_Template.pug" % (email_name)
-    with open(template_file_name, 'w') as out_file:
+    template_text = build_template_text(parsed_data)
+    template_file_name = "/../templates/%s_Template.pug" % (email_name)
+    with open(dir_path + template_file_name, 'w') as out_file:
         out_file.writelines(template_text)
 
 #body_data: String - body copy
@@ -272,7 +282,7 @@ def build_cta_text(module_data):
             (module_data[cta_dict['cta_key_copy']])
         cta_text += "   'cta_type': \"%s\",\n" % \
             (module_data[cta_dict['cta_key_type']].lower())
-        cta_text += "   'cta_color': \"%s\",\n" % \
+        cta_text += "   'cta_color': %s,\n" % \
             (cta_color_swap(module_data[cta_dict['cta_key_color']]))
         cta_text += "   'cta_link_url': \"%s\"" % \
             (module_data[cta_dict['cta_key_url']])
@@ -324,8 +334,8 @@ def build_copy_text(copy_data):
 
 def build_copy_file(email_name, parsed_data):
     copy_text = build_copy_text(parsed_data)
-    copy_file_name = "../copy/%s_Copy.pug" % (email_name)
-    with open(copy_file_name, 'w') as out_file:
+    copy_file_name = "/../copy/%s_Copy.pug" % (email_name)
+    with open(dir_path + copy_file_name, 'w') as out_file:
         out_file.writelines(copy_text)
 
 def build_files():

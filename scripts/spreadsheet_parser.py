@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import csv
-input_file = 'test_EC_.csv'
+import os
+
+input_file = os.path.dirname(os.path.realpath(__file__)) + '/constructedEmail_.csv'
 # Get Module info and CTA info and return it as a dictionary
 def parseModules(data, module_count):
     modules_dicts = []
@@ -36,6 +38,7 @@ def parseData():
     module = []
     module_rows = []
     module_row_count = 0
+    input_file
     with open(input_file, 'rU') as csvfile:
         next(csvfile) #Ignore header
         csvReader = csv.reader(csvfile, dialect='excel')
