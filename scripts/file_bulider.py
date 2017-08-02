@@ -1,5 +1,7 @@
 import spreadsheet_parser
+import os
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
 #######################Block Strings######################
 module_types = {
     'Full Width': "    include ../components/full_width_card",
@@ -182,7 +184,7 @@ def build_module_text(hero, module_name, module_type, content_area):
 def build_emails_text(email_name, email_data):
     email_text = email_start_text % (email_name, email_name)
     for i in range (0, int(email_data[0]['Number of Modules'])):
-        email_text += build_module_text((i == 1),
+        email_text += build_module_text((i == 0),
                                         email_data[i + 1]['moduleName'],
                                         email_data[i + 1]['moduleType'],
                                         i + 2)
