@@ -102,6 +102,38 @@ template_end_text = """
                 td(style=td_style)
 """
 
+copy_start_text = """
+- var static_image_path = "images/"
+- var image_path = "images/"
+
+//- Email Components
+- var email_subject = "%s"
+
+- var email_preheader = "%s"
+- var view_in_browser_link_url = ""
+- var view_in_browser_link_text = "View in Browser"
+
+"""
+
+copy_module_text = """
+//- %s Overview
+- var %s_hero_image_url = image_path + ""
+- var %s_hero_image_link_url = "%s"
+- var %s_logo_image = image_path + ""
+- var %s_headline = "%s"
+-
+    var %s_body = %s
+-
+    var %s_cta_data = %s
+-
+    var %s_legal = %s
+"""
+
+copy_end_text = """
+//- Footer
+- var footer_copy = "%s"
+//- END
+"""
 #######################End of Block Strings######################
 
 
@@ -170,16 +202,56 @@ def build_template_file(email_name, template_text):
     with open(template_file_name, 'w') as out_file:
         out_file.writelines(template_text)
 
+#body_data: String - body copy
+def build_body_text(body_data):
+    body_text = "["
+    if body_data != "":
+        body_data_split = body_data['bodyCopy'].splitlines()
+        print(body_data_split)
+        body_text += "{"
+        body_text += "'body_text': \"%s\""
+        body_text += "}"
+    body_text = "]"
+
+
+
+#module_name: String - Name of the module used for variable names
+#module_data: Dictionary - Data used for variable values
+def build_module_copy(module_name, module_data):
+    if 'cUrl0' in module_data.keys():
+        url_text = module_data['cUrl0']
+    else:
+        url_text = ""
+    headline_text = module_data['headline']
+    body_text = build_body_text(module_data['bodyCopy'])
+    cta_text = ""
+    legal_text = ""
+    module_copy_text = copy_module_text % (module_name,
+                                          module_name,
+                                          module_name,
+                                          url_text,
+                                          module_name,
+                                          module_name,
+                                          headline_text,
+                                          module_name,
+                                          body_text,
+                                          module_name,
+                                          cta_text,
+                                          module_name,
+                                          legal_text)
+
 def build_files():
     #Parse Data
     parsed_data = spreadsheet_parser.parse()
     #Build Email File
     email_name = parsed_data[0]['Email Name']
     email_text = build_emails_text(email_name, parsed_data)
-    build_email_file(email_name, email_text)
+    #build_email_file(email_name, email_text)
     #Build template
     template_text = \
         build_template_text(int(parsed_data[0]['Number of Modules']))
-    build_template_file(email_name, template_text)
-
+    #build_template_file(email_name, template_text)
+    build_body_text(parsed_data[1]['bodyCopy'])
+    build_body_text(parsed_data[2]['bodyCopy'])
+    build_body_text(parsed_data[3]['bodyCopy'])
 build_files()
