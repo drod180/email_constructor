@@ -134,6 +134,19 @@ copy_end_text = """
 - var footer_copy = "%s"
 //- END
 """
+
+open_bracket = """
+    {
+"""
+
+close_bracket = """
+    }"""
+
+close_bracket_comma = """
+    },"""
+
+close_array = """
+    ]"""
 #######################End of Block Strings######################
 
 
@@ -173,7 +186,8 @@ def build_emails_text(email_name, email_data):
 
 #email_name: String - Name of email used for file name
 #email_text: String - Email text to buid file with
-def build_email_file(email_name, email_text):
+def build_email_file(email_name, parsed_data):
+    email_text = build_emails_text(email_name, parsed_data)
     email_file_name = "../emails/%s_Email.pug" % (email_name)
     with open(email_file_name, 'w') as out_file:
         out_file.writelines(email_text)
@@ -197,7 +211,8 @@ def build_template_text(module_count, links = True):
 
 #email_name: String - Name of email used for file name
 #template_text: String - Template text to buid file with
-def build_template_file(email_name, template_text):
+def build_template_file(email_name, parsed_data):
+    template_text = build_template_text(int(parsed_data[0]['Number of Modules']))
     template_file_name = "../templates/%s_Template.pug" % (email_name)
     with open(template_file_name, 'w') as out_file:
         out_file.writelines(template_text)
@@ -206,14 +221,67 @@ def build_template_file(email_name, template_text):
 def build_body_text(body_data):
     body_text = "["
     if body_data != "":
-        body_data_split = body_data['bodyCopy'].splitlines()
-        print(body_data_split)
-        body_text += "{"
-        body_text += "'body_text': \"%s\""
-        body_text += "}"
-    body_text = "]"
+        body_data_split = body_data.splitlines()
+        for i, copy in enumerate(body_data_split):
+            body_text += open_bracket
+            body_text += "   'body_text': \"%s\"" % (copy)
+            if i == len(body_data_split) - 1:
+                body_text += close_bracket
+            else:
+                body_text += close_bracket_comma
+    body_text += close_array
 
+    return body_text
 
+#legal_data: String - legal copy
+def build_legal_text(legal_data):
+    legal_text = "["
+    if legal_data != "":
+        legal_data_split = legal_data.splitlines()
+        for i, copy in enumerate(legal_data_split):
+            legal_text += open_bracket
+            legal_text += "   'legal_text': \"%s\"" % (copy)
+            if i == len(legal_data_split) - 1:
+                legal_text += close_bracket
+            else:
+                legal_text += close_bracket_comma
+    legal_text += close_array
+
+    return legal_text
+
+#cta_color: String - word to be swapped with appropriate keyword
+def cta_color_swap(cta_color):
+    if cta_color == "Primary":
+        return "brand_color"
+    else:
+        return "brand_color_alt"
+
+#module_data: dictionary - all the module data
+def build_cta_text(module_data):
+    cta_text = "["
+
+    for i in range(0, int(module_data['ctaCount'])):
+        cta_dict = {}
+        cta_dict['cta_key_copy'] = "cCopy" + str(i)
+        cta_dict['cta_key_url'] = "cUrl" + str(i)
+        cta_dict['cta_key_type'] = "cType" + str(i)
+        cta_dict['cta_key_color'] = "cColor" + str(i)
+
+        cta_text += open_bracket
+        cta_text += "   'cta_text': \"%s\",\n" % \
+            (module_data[cta_dict['cta_key_copy']])
+        cta_text += "   'cta_type': \"%s\",\n" % \
+            (module_data[cta_dict['cta_key_type']].lower())
+        cta_text += "   'cta_color': \"%s\",\n" % \
+            (cta_color_swap(module_data[cta_dict['cta_key_color']]))
+        cta_text += "   'cta_link_url': \"%s\"" % \
+            (module_data[cta_dict['cta_key_url']])
+        if i == int(module_data['ctaCount']) - 1:
+            cta_text += close_bracket
+        else:
+            cta_text += close_bracket_comma
+    cta_text += close_array
+    return cta_text
 
 #module_name: String - Name of the module used for variable names
 #module_data: Dictionary - Data used for variable values
@@ -224,34 +292,53 @@ def build_module_copy(module_name, module_data):
         url_text = ""
     headline_text = module_data['headline']
     body_text = build_body_text(module_data['bodyCopy'])
-    cta_text = ""
-    legal_text = ""
+    cta_text = build_cta_text(module_data)
+    legal_text = build_legal_text(module_data['legalCopy'])
+
     module_copy_text = copy_module_text % (module_name,
-                                          module_name,
-                                          module_name,
-                                          url_text,
-                                          module_name,
-                                          module_name,
-                                          headline_text,
-                                          module_name,
-                                          body_text,
-                                          module_name,
-                                          cta_text,
-                                          module_name,
-                                          legal_text)
+                                           module_name,
+                                           module_name,
+                                           url_text,
+                                           module_name,
+                                           module_name,
+                                           headline_text,
+                                           module_name,
+                                           body_text,
+                                           module_name,
+                                           cta_text,
+                                           module_name,
+                                           legal_text)
+
+    return module_copy_text
+
+#module_count: Int - Number of modules in email_name
+#copy_data: Array of Dictionaries - All the parsed data
+def build_copy_text(copy_data):
+    copy_text = copy_start_text % (copy_data[0]['Subject Line'],
+                                   copy_data[0]['Preheader Copy'])
+    for i in range(0, int(copy_data[0]['Number of Modules'])):
+        copy_text += build_module_copy(copy_data[i + 1]['moduleName'],
+                                       copy_data[i + 1])
+    copy_text += copy_end_text % ("")
+    return copy_text
+
+def build_copy_file(email_name, parsed_data):
+    copy_text = build_copy_text(parsed_data)
+    copy_file_name = "../copy/%s_Copy.pug" % (email_name)
+    with open(copy_file_name, 'w') as out_file:
+        out_file.writelines(copy_text)
 
 def build_files():
     #Parse Data
     parsed_data = spreadsheet_parser.parse()
-    #Build Email File
     email_name = parsed_data[0]['Email Name']
-    email_text = build_emails_text(email_name, parsed_data)
-    #build_email_file(email_name, email_text)
+    #Build Email File
+    build_email_file(email_name, parsed_data)
     #Build template
-    template_text = \
-        build_template_text(int(parsed_data[0]['Number of Modules']))
-    #build_template_file(email_name, template_text)
-    build_body_text(parsed_data[1]['bodyCopy'])
-    build_body_text(parsed_data[2]['bodyCopy'])
-    build_body_text(parsed_data[3]['bodyCopy'])
+    build_template_file(email_name, parsed_data)
+    #Build copy
+    build_copy_file(email_name, parsed_data)
+
+
+############################ Run Script ####################################
 build_files()
