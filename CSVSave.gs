@@ -1,16 +1,66 @@
+function downloadAsCsvFile() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var editorSheet = ss.getSheetByName("Editor");
+  ContentService.createTextOutput(editorSheet)
+                .downloadAsFile("MyData.csv")
+                .setMimeType(ContentService.MimeType.CSV);
+}
 
 function saveAsCSVFile () {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var editorSheet = ss.getSheetByName("Editor");
-  var emailName = editorSheet.getRange(2,2,1,1).getValue().toLowerCase().replace(/ /g,'_') + '_EC_';
+  var emailName = editorSheet.getRange(2,2,1,1).getValue().toLowerCase().replace(/ /g,'_') + 'EC_';
   var folders = DriveApp.getFoldersByName("Constructor_Emails");
 
   var projectFolder = setupDirectory_(folders, emailName);
 
   var scriptsI = projectFolder.getFoldersByName("scripts");
   var scripts = scriptsI.next();
-  var csvFile = convertRangeToCsvFile_(emailName + ".csv", editorSheet);
+  var csvFile = convertRangeToCsvFile_("constructedEmail_.csv", editorSheet);
+
+  var duplicateCSVs = scripts.getFilesByName("constructedEmail_.csv");
+  while (duplicateCSVs.hasNext()) {
+    var file = duplicateCSVs.next();
+    file.setTrashed(true);
+  }
+
   scripts.addFile(csvFile);
+  promptDownload_(projectFolder);
+
+}
+
+function promptDownload_(projectFolder) {
+  var zipped = Utilities.zip(getBlobs_(projectFolder, ''), projectFolder.getName()+'.zip');
+  var zipFile = projectFolder.getParents().next().createFile(zipped);
+  var url = zipFile.getDownloadUrl();
+
+  var htmlString = '<div><button style="height: 50px; width: 100%; text-align: center; font-size: 32px; background-color: grey; border-radius: 5px; border: 2px solid black;"><a type="button" style="width: 100%; text-decoration: none; color: white;" href="'+url.slice(0, -8)+'" target="_blank"/>DOWNLOAD NOW</a></button></div>'
+  var htmlOutput = HtmlService
+    .createHtmlOutput(htmlString)
+    .setSandboxMode(HtmlService.SandboxMode.IFRAME)
+    .setHeight(80);
+
+  SpreadsheetApp
+    .getUi()
+    .showModalDialog(htmlOutput, 'Download Folders...');
+}
+
+function getBlobs_(rootFolder, path) {
+  var blobs = [];
+  var files = rootFolder.getFiles();
+  while (files.hasNext()) {
+    var file = files.next().getBlob();
+    file.setName(path+file.getName());
+    blobs.push(file);
+  }
+  var folders = rootFolder.getFolders();
+  while (folders.hasNext()) {
+    var folder = folders.next();
+    var fPath = path+folder.getName()+'/';
+    blobs.push(Utilities.newBlob([]).setName(fPath)); //comment/uncomment this line to skip/include empty folders
+    blobs = blobs.concat(getBlobs_(folder, fPath));
+  }
+  return blobs;
 }
 
 function setupDirectory_(folders, emailName) {
@@ -69,7 +119,6 @@ function buildFolder_(folder, name, template, isNew) {
   }
   return newFolder;
 }
-
 
 function convertRangeToCsvFile_(csvFileName, sheet) {
   // get available data range in the spreadsheet
