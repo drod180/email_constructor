@@ -10,6 +10,7 @@ module_types = {
     'Half Width (right)': "    include ../components/half_width_card",
     'Half Width (left)': "    include ../components/half_width_card",
     'Partner': "    include ../components/partners_module",
+    'BYO': "    include ../content-sections/byo_module"
     }
 
 module_vars_standard = """
@@ -25,6 +26,16 @@ module_vars_standard = """
     -var side_margin = "30"
     -var height = "auto"
 """
+
+module_vars_byo = """
+    -var image_url = byo_image_url
+    -var image_link_url = byo_image_link_url
+    -var section_headline = byo_headline
+    -var section_data = byo_series
+    -var section_data_tracking_parameter = byo_url_tracking_parameter
+    -var height = "auto"
+"""
+
 email_start_text = """
 extends ../templates/%s_Template
 
@@ -154,6 +165,58 @@ close_bracket_comma = """
 
 close_array = """
     ]"""
+
+copy_byo_text = """
+//- Build Your Own
+- var byo_headline = "BUILD YOUR OWN BMW."
+- var byo_image_link_url = "https://www.bmwusa.com/byo.html"
+- var byo_image_url = image_path+"eExclusive_BYO.jpg"
+- var byo_url_tracking_parameter = ""
+-
+    var byo_series = [
+    {
+    'name':'2',
+    'url':'2',
+    'parameter':'Series='
+    },{
+    'name':'3',
+    'url':'3',
+    'parameter':'Series='
+    },{
+    'name':'4',
+    'url':'4',
+    'parameter':'Series='
+    },{
+    'name':'5',
+    'url':'5',
+    'parameter':'Series='
+    },{
+    'name':'6',
+    'url':'6',
+    'parameter':'Series='
+    },{
+    'name':'7',
+    'url':'7',
+    'parameter':'Series='
+    },{
+    'name':'X',
+    'url':'X',
+    'parameter':'Series='
+    },{
+    'name':'BMWi',
+    'url':'BMWi',
+    'parameter':'Series='
+    },{
+    'name':'M',
+    'url':'M',
+    'parameter':'Series='
+    },{
+    'name':'View All',
+    'url':'2,3,4,5,6,7,X,M,BMWi',
+    'parameter':'Series='
+    }
+    ]
+"""
 #######################End of Block Strings######################
 
 
@@ -168,14 +231,17 @@ def build_module_text(hero, module_name, module_type, content_area):
     else:
         headline_style = '""'
     module_text = content_area_text % (content_area)
-    module_text += module_vars_standard % (module_name,
-                                          module_name,
-                                          module_name,
-                                          module_name,
-                                          module_name,
-                                          module_name,
-                                          module_name,
-                                          headline_style)
+    if module_type == 'BYO':
+        module_text += module_vars_byo
+    else:
+        module_text += module_vars_standard % (module_name,
+                                              module_name,
+                                              module_name,
+                                              module_name,
+                                              module_name,
+                                              module_name,
+                                              module_name,
+                                              headline_style)
     module_text += module_types[module_type]
     return module_text
 
@@ -224,7 +290,8 @@ def build_template_text(parsed_data, links = True):
 #email_name: String - Name of email used for file name
 #template_text: String - Template text to buid file with
 def build_template_file(email_name, parsed_data):
-    template_text = build_template_text(parsed_data)
+    template_text = build_template_text(parsed_data,
+                            parsed_data[0]['BMW Links (Footer)'] == 'Include')
     template_file_name = "/../templates/%s_Template.pug" % (email_name)
     with open(dir_path + template_file_name, 'w') as out_file:
         out_file.writelines(template_text)
@@ -298,28 +365,31 @@ def build_cta_text(module_data):
 #module_name: String - Name of the module used for variable names
 #module_data: Dictionary - Data used for variable values
 def build_module_copy(module_name, module_data):
-    if 'cUrl0' in module_data.keys():
-        url_text = module_data['cUrl0']
+    if module_data['moduleType'] == "BYO":
+        module_copy_text = copy_byo_text
     else:
-        url_text = ""
-    headline_text = module_data['headline']
-    body_text = build_body_text(module_data['bodyCopy'])
-    cta_text = build_cta_text(module_data)
-    legal_text = build_legal_text(module_data['legalCopy'])
+        if 'cUrl0' in module_data.keys():
+            url_text = module_data['cUrl0']
+        else:
+            url_text = ""
+        headline_text = module_data['headline']
+        body_text = build_body_text(module_data['bodyCopy'])
+        cta_text = build_cta_text(module_data)
+        legal_text = build_legal_text(module_data['legalCopy'])
 
-    module_copy_text = copy_module_text % (module_name,
-                                           module_name,
-                                           module_name,
-                                           url_text,
-                                           module_name,
-                                           module_name,
-                                           headline_text,
-                                           module_name,
-                                           body_text,
-                                           module_name,
-                                           cta_text,
-                                           module_name,
-                                           legal_text)
+        module_copy_text = copy_module_text % (module_name,
+                                               module_name,
+                                               module_name,
+                                               url_text,
+                                               module_name,
+                                               module_name,
+                                               headline_text,
+                                               module_name,
+                                               body_text,
+                                               module_name,
+                                               cta_text,
+                                               module_name,
+                                               legal_text)
 
     return module_copy_text
 
@@ -331,7 +401,8 @@ def build_copy_text(copy_data):
     for i in range(0, int(copy_data[0]['Number of Modules'])):
         copy_text += build_module_copy(copy_data[i + 1]['moduleName'],
                                        copy_data[i + 1])
-    copy_text += copy_end_text % ("")
+                                       
+    copy_text += copy_end_text % (copy_data[0]['Additional Legal'])
     return copy_text
 
 def build_copy_file(email_name, parsed_data):

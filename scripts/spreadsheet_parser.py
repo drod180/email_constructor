@@ -65,7 +65,7 @@ def parseData():
 
             i += 1
 
-
+    header_data['Email Name'] = header_data['Email Name'].replace(/ /g,"_");
     return header_data + module_rows
 
 
@@ -76,7 +76,10 @@ def parse():
                         my_data[1].items() +
                         my_data[2].items() +
                         my_data[3].items() +
-                        my_data[4].items())] + parsed_modules
+                        my_data[4].items() +
+                        my_data[5].items() +
+                        my_data[6].items() +
+                        my_data[7].items())] + parsed_modules
 
     return parsed_data
 parse()
