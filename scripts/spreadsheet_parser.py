@@ -7,7 +7,7 @@ input_file = os.path.dirname(os.path.realpath(__file__)) + '/constructedEmail_.c
 def parseModules(data, module_count):
     modules_dicts = []
     module_dict = {}
-    module_start = 5
+    module_start = 6
 
     for i in range (0, module_count):
         module_dict = {}
@@ -44,7 +44,7 @@ def parseData():
         csvReader = csv.reader(csvfile, dialect='excel')
         i = 0
         for row in csvReader:
-            if i < 5:
+            if i < 6:
                 header_data.append({row[0]: row[1]})
             else:
                 if row[0] != '':
@@ -65,7 +65,7 @@ def parseData():
 
             i += 1
 
-    header_data['Email Name'] = header_data['Email Name'].replace(/ /g,"_");
+    header_data[0]['Email Name'] = header_data[0]['Email Name'].replace(" ","_");
     return header_data + module_rows
 
 
@@ -77,9 +77,7 @@ def parse():
                         my_data[2].items() +
                         my_data[3].items() +
                         my_data[4].items() +
-                        my_data[5].items() +
-                        my_data[6].items() +
-                        my_data[7].items())] + parsed_modules
+                        my_data[5].items())] + parsed_modules
 
     return parsed_data
 parse()
